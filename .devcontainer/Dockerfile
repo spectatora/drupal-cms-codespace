@@ -53,10 +53,9 @@ RUN echo "Cleaning up" \
     && rm /tmp/php.ini \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a user (more secure way)
+# Create a user
 RUN echo "Creating a user" \
-    && useradd -m drupal \
-    && chpasswd <<< "drupal:drupal"
+    && useradd -m drupal -p drupal
 
 USER drupal
 ENV SHELL /bin/bash
