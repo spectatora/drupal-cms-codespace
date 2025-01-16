@@ -15,11 +15,24 @@ RUN echo "Adding updated PHP sources" \
 
 # Install some common packages
 RUN echo "Installing common packages" \
-    && apt-get install git imagemagick nano openssh-server sqlite3 wget unzip -yq
+    && apt-get install git imagemagick nano openssh-server wget unzip -yq
 
 # Modify ImageMagick policy to allow PDF read/write
 RUN echo "Modifying ImageMagick policy to allow PDF read/write" \
     && sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/g' /etc/ImageMagick-6/policy.xml
+
+ # Install newer SQLite3
+RUN echo "Installing newer SQLite3" \
+&& apt-get install -y wget build-essential tcl \
+&& wget https://www.sqlite.org/2024/sqlite-autoconf-3450100.tar.gz \
+&& tar xvfz sqlite-autoconf-3450100.tar.gz \
+&& cd sqlite-autoconf-3450100 \
+&& ./configure --prefix=/usr \
+&& make \
+&& make install \
+&& cd .. \
+&& rm -rf sqlite-autoconf-3450100* \
+&& ldconfig   
 
 # Install PHP CLI with some extensions for Drupal development
 RUN echo "Installing PHP CLI with extensions for Drupal development" \
@@ -56,6 +69,19 @@ RUN echo "Cleaning up" \
 # Create a user
 RUN echo "Creating a user" \
     && useradd -m drupal -p drupal
+
+# Install newer SQLite3
+RUN echo "Installing newer SQLite3" \
+    && apt-get install -y wget build-essential tcl \
+    && wget https://www.sqlite.org/2024/sqlite-autoconf-3450100.tar.gz \
+    && tar xvfz sqlite-autoconf-3450100.tar.gz \
+    && cd sqlite-autoconf-3450100 \
+    && ./configure --prefix=/usr \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf sqlite-autoconf-3450100* \
+    && ldconfig
 
 USER drupal
 ENV SHELL /bin/bash
