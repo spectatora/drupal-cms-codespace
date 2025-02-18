@@ -1,49 +1,16 @@
-FROM debian:bullseye-slim
-ARG DEBIAN_FRONTEND=noninteractive
-USER root
-COPY php.ini /tmp
+FROM devwithlando/php:8.3-fpm-5
 
-# Update package list
-RUN echo "Updating package list" \
-    && apt-get update -yq
+# Set the SQLite version
+ARG SQLITE_VERSION=3.45.1
 
-# Add updated PHP sources
-RUN echo "Adding updated PHP sources" \
-    && apt-get install curl -yq \
-    && curl -sSL https://packages.sury.org/php/README.txt | bash -x \
-    && apt-get update -yq
+# Update package list and install SQLite
+RUN apt-get update && apt-get install -y \
+    libsqlite3-dev \
+    && docker-php-ext-install pdo_sqlite \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install some common packages
-RUN echo "Installing common packages" \
-    && apt-get install git imagemagick nano openssh-server wget unzip -yq
-
-# Modify ImageMagick policy to allow PDF read/write
-RUN echo "Modifying ImageMagick policy to allow PDF read/write" \
-    && sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/g' /etc/ImageMagick-6/policy.xml
-
- # Install newer SQLite3
-RUN echo "Installing newer SQLite3" \
-&& apt-get install -y wget build-essential tcl \
-&& wget https://www.sqlite.org/2024/sqlite-autoconf-3450100.tar.gz \
-&& tar xvfz sqlite-autoconf-3450100.tar.gz \
-&& cd sqlite-autoconf-3450100 \
-&& ./configure --prefix=/usr \
-&& make \
-&& make install \
-&& cd .. \
-&& rm -rf sqlite-autoconf-3450100* \
-&& ldconfig   
-
-# Install PHP CLI with some extensions for Drupal development
-RUN echo "Installing PHP CLI with extensions for Drupal development" \
-    && apt-get install php8.3-dev php8.3-xml -yq \
-    && apt-get install php8.3-apcu php8.3-curl php8.3-gd php8.3-imagick php8.3-mbstring php8.3-sqlite3 php8.3-zip -yq
-
-# Configure PHP and install xdebug
-RUN echo "Configuring PHP and installing xdebug" \
-    && pear config-set php_ini /etc/php/8.3/cli/php.ini \
-    && pecl install xdebug \
-    && cat /tmp/php.ini >> /etc/php/8.3/cli/php.ini
+# Verify installations
+RUN php -v && sqlite3 --version
 
 # Install Composer
 RUN echo "Installing Composer" \
@@ -55,11 +22,6 @@ RUN echo "Installing Composer" \
 RUN echo "Installing global Drush launcher" \
     && wget -O /usr/local/bin/drush https://github.com/drush-ops/drush-launcher/releases/latest/download/drush.phar \
     && chmod +x /usr/local/bin/drush
-
-# Clean up some things
-RUN echo "Cleaning up" \
-    && rm /tmp/php.ini \
-    && rm -rf /var/lib/apt/lists/*
 
 # Create a user
 RUN echo "Creating a user" \
