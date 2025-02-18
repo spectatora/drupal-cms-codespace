@@ -45,11 +45,6 @@ RUN echo "Configuring PHP and installing xdebug" \
     && pecl install xdebug \
     && cat /tmp/php.ini >> /etc/php/8.3/cli/php.ini
 
-# Install NodeJS LTS
-RUN echo "Installing NodeJS LTS" \
-    && curl -sL https://deb.nodesource.com/setup_lts.x | bash \
-    && apt-get install nodejs -yq
-
 # Install Composer
 RUN echo "Installing Composer" \
     && wget https://getcomposer.org/installer \
@@ -69,19 +64,6 @@ RUN echo "Cleaning up" \
 # Create a user
 RUN echo "Creating a user" \
     && useradd -m drupal -p drupal
-
-# Install newer SQLite3
-RUN echo "Installing newer SQLite3" \
-    && apt-get install -y wget build-essential tcl \
-    && wget https://www.sqlite.org/2024/sqlite-autoconf-3450100.tar.gz \
-    && tar xvfz sqlite-autoconf-3450100.tar.gz \
-    && cd sqlite-autoconf-3450100 \
-    && ./configure --prefix=/usr \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -rf sqlite-autoconf-3450100* \
-    && ldconfig
 
 USER drupal
 ENV SHELL /bin/bash
